@@ -1,7 +1,7 @@
 # Scroll direction
 Simple library for detecting the scroll vertical direction.
 
-[LIVE DEMO](https://codepen.io/gasparerr/pen/GRRLYwp?editors=1010)
+[DEMO](https://codepen.io/gasparerr/pen/GRRLYwp?editors=1010)
 
 - Provides a custom event `scrollDirectionChange`
 - Automatically adds classes to an element based on the direction `scroll-direction-up` or `scroll-direction-down`.
