@@ -1,6 +1,6 @@
 class ScrollDirection{
 
-  constructor(options){
+  constructor(options = {}){
     const { target = window , addClassesTo = 'body', minInterval = 25 } = options
     this.minInterval      = minInterval // Interval between checks
     this.target           = target
@@ -9,27 +9,26 @@ class ScrollDirection{
     this.ready            = true
     this.lastHeight       = null
     this.direction        = ''
-    this.detectDirection  = this.detectDirection.bind(this)
+    this.scrollHandler    = this.scrollHandler.bind(this)
     this.enable           = this.enable.bind(this)
+    this.enableTimeout    = null
     this.watch()
   }
 
   scrollHandler(ev){
     if(this.ready){
-      ready = false
+      this.ready = false
       this.detectDirection(ev)
-      setTimeout(restore,this.minInterval)
+      this.enableTimeout = setTimeout(this.enable,this.minInterval)
     }
   }
 
   enable(){
     this.ready = true
+    clearTimeout(this.enableTimeout)
   }
 
   watch(){
-    let ready = true
-    let restore = ()=> ready = true
-    this.listener = this.detectDirection.bind(this)
     this.target.addEventListener('touchstart',this.enable)
     this.target.addEventListener('touchend',this.enable)
     this.target.addEventListener('touchmove',this.enable)
@@ -37,7 +36,7 @@ class ScrollDirection{
   }
 
   stop(){
-    this.target.removeEventListener('scroll',this.listener)
+    this.target.removeEventListener('scroll',this.scrollHandler)
     this.target.removeEventListener('touchstart',this.enable)
     this.target.removeEventListener('touchend',this.enable)
     this.target.removeEventListener('touchmove',this.enable)
