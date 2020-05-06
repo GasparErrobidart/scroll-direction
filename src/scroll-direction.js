@@ -1,28 +1,31 @@
 class ScrollDirection{
 
   constructor(options){
-    const { target = window , addClassesTo = 'body' } = options
+    const { target = window , addClassesTo = 'body', minInterval = 25 } = options
+    this.minInterval = minInterval // Interval between checks
     this.target = target
     this.addClassesTo = addClassesTo ? document.querySelector(addClassesTo) : addClassesTo;
     this.last = 0
+    this.lastHeight = null
     this.direction = ''
     this.watch()
   }
 
   watch(){
-    let limiter
-    let limitCount = 0
+    let ready = true
+    let restore = ()=> ready = true
     this.listener = this.detectDirection.bind(this)
-    this.target.addEventListener('scroll',()=>{
-      if(limitCount < 10){
-        clearTimeout(limiter)
-        limitCount++
-      }
-      limiter = setTimeout(()=>{
-        limitCount = 0
-        this.listener()
-      },10)
+    this.target.addEventListener('touchstart',restore)
+    this.target.addEventListener('touchend',restore)
+    this.target.addEventListener('touchmove',restore)
 
+    this.target.addEventListener('scroll',(ev)=>{
+
+      if(ready){
+        ready = false
+        this.listener(ev)
+        setTimeout(restore,this.minInterval)
+      }
 
     })
   }
@@ -45,14 +48,33 @@ class ScrollDirection{
     this.target.dispatchEvent(new CustomEvent('scrollDirectionChange',{ detail : this }))
   }
 
-  detectDirection(event){
-    const scrolled      = this.target.scrollY || this.target.scrollTop
-    const newDirection  = (scrolled > this.last) ? 'down' : 'up'
+  detectDirection(ev){
+    let scrolled      = this.target.scrollY || this.target.scrollTop || 0
+    let height        = ( this.target  == window ) ? document.body.clientHeight : this.target.clientHeight
+    let heightDiff    = 0
+
+    // If document height changed, adjust scroll value
+    if(typeof this.lastHeight != "number") this.lastHeight = height
+    if(this.lastHeight != height){
+      heightDiff = height - this.lastHeight
+    }
+
+    let newDirection = this.direction
+
+    if( scrolled > this.last + heightDiff ){
+      newDirection = "down"
+    }else if(scrolled < this.last + heightDiff){
+      newDirection = "up"
+    }
+
+
+    this.last           = scrolled
+    this.lastHeight     = height
     if(this.direction   != newDirection){
       this.direction    = newDirection
       this.onDirectionChange()
     }
-    this.last           = scrolled
+
   }
 
 }

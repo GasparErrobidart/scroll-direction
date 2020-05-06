@@ -11,11 +11,15 @@ var ScrollDirection = function () {
     var _options$target = options.target,
         target = _options$target === undefined ? window : _options$target,
         _options$addClassesTo = options.addClassesTo,
-        addClassesTo = _options$addClassesTo === undefined ? 'body' : _options$addClassesTo;
+        addClassesTo = _options$addClassesTo === undefined ? 'body' : _options$addClassesTo,
+        _options$minInterval = options.minInterval,
+        minInterval = _options$minInterval === undefined ? 25 : _options$minInterval;
 
+    this.minInterval = minInterval; // Interval between checks
     this.target = target;
     this.addClassesTo = addClassesTo ? document.querySelector(addClassesTo) : addClassesTo;
     this.last = 0;
+    this.lastHeight = null;
     this.direction = '';
     this.watch();
   }
@@ -25,18 +29,22 @@ var ScrollDirection = function () {
     value: function watch() {
       var _this = this;
 
-      var limiter = void 0;
-      var limitCount = 0;
+      var ready = true;
+      var restore = function restore() {
+        return ready = true;
+      };
       this.listener = this.detectDirection.bind(this);
-      this.target.addEventListener('scroll', function () {
-        if (limitCount < 10) {
-          clearTimeout(limiter);
-          limitCount++;
+      this.target.addEventListener('touchstart', restore);
+      this.target.addEventListener('touchend', restore);
+      this.target.addEventListener('touchmove', restore);
+
+      this.target.addEventListener('scroll', function (ev) {
+
+        if (ready) {
+          ready = false;
+          _this.listener(ev);
+          setTimeout(restore, _this.minInterval);
         }
-        limiter = setTimeout(function () {
-          limitCount = 0;
-          _this.listener();
-        }, 10);
       });
     }
   }, {
@@ -62,14 +70,31 @@ var ScrollDirection = function () {
     }
   }, {
     key: 'detectDirection',
-    value: function detectDirection(event) {
-      var scrolled = this.target.scrollY || this.target.scrollTop;
-      var newDirection = scrolled > this.last ? 'down' : 'up';
+    value: function detectDirection(ev) {
+      var scrolled = this.target.scrollY || this.target.scrollTop || 0;
+      var height = this.target == window ? document.body.clientHeight : this.target.clientHeight;
+      var heightDiff = 0;
+
+      // If document height changed, adjust scroll value
+      if (typeof this.lastHeight != "number") this.lastHeight = height;
+      if (this.lastHeight != height) {
+        heightDiff = height - this.lastHeight;
+      }
+
+      var newDirection = this.direction;
+
+      if (scrolled > this.last + heightDiff) {
+        newDirection = "down";
+      } else if (scrolled < this.last + heightDiff) {
+        newDirection = "up";
+      }
+
+      this.last = scrolled;
+      this.lastHeight = height;
       if (this.direction != newDirection) {
         this.direction = newDirection;
         this.onDirectionChange();
       }
-      this.last = scrolled;
     }
   }]);
 
