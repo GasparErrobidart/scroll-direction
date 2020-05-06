@@ -2,36 +2,45 @@ class ScrollDirection{
 
   constructor(options){
     const { target = window , addClassesTo = 'body', minInterval = 25 } = options
-    this.minInterval = minInterval // Interval between checks
-    this.target = target
-    this.addClassesTo = addClassesTo ? document.querySelector(addClassesTo) : addClassesTo;
-    this.last = 0
-    this.lastHeight = null
-    this.direction = ''
+    this.minInterval      = minInterval // Interval between checks
+    this.target           = target
+    this.addClassesTo     = addClassesTo ? document.querySelector(addClassesTo) : addClassesTo;
+    this.last             = 0
+    this.ready            = true
+    this.lastHeight       = null
+    this.direction        = ''
+    this.detectDirection  = this.detectDirection.bind(this)
+    this.enable           = this.enable.bind(this)
     this.watch()
+  }
+
+  scrollHandler(ev){
+    if(this.ready){
+      ready = false
+      this.detectDirection(ev)
+      setTimeout(restore,this.minInterval)
+    }
+  }
+
+  enable(){
+    this.ready = true
   }
 
   watch(){
     let ready = true
     let restore = ()=> ready = true
     this.listener = this.detectDirection.bind(this)
-    this.target.addEventListener('touchstart',restore)
-    this.target.addEventListener('touchend',restore)
-    this.target.addEventListener('touchmove',restore)
-
-    this.target.addEventListener('scroll',(ev)=>{
-
-      if(ready){
-        ready = false
-        this.listener(ev)
-        setTimeout(restore,this.minInterval)
-      }
-
-    })
+    this.target.addEventListener('touchstart',this.enable)
+    this.target.addEventListener('touchend',this.enable)
+    this.target.addEventListener('touchmove',this.enable)
+    this.target.addEventListener('scroll',this.scrollHandler)
   }
 
   stop(){
     this.target.removeEventListener('scroll',this.listener)
+    this.target.removeEventListener('touchstart',this.enable)
+    this.target.removeEventListener('touchend',this.enable)
+    this.target.removeEventListener('touchmove',this.enable)
   }
 
   addClasses(){

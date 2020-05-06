@@ -19,38 +19,48 @@ var ScrollDirection = function () {
     this.target = target;
     this.addClassesTo = addClassesTo ? document.querySelector(addClassesTo) : addClassesTo;
     this.last = 0;
+    this.ready = true;
     this.lastHeight = null;
     this.direction = '';
+    this.detectDirection = this.detectDirection.bind(this);
+    this.enable = this.enable.bind(this);
     this.watch();
   }
 
   _createClass(ScrollDirection, [{
+    key: 'scrollHandler',
+    value: function scrollHandler(ev) {
+      if (this.ready) {
+        ready = false;
+        this.detectDirection(ev);
+        setTimeout(restore, this.minInterval);
+      }
+    }
+  }, {
+    key: 'enable',
+    value: function enable() {
+      this.ready = true;
+    }
+  }, {
     key: 'watch',
     value: function watch() {
-      var _this = this;
-
       var ready = true;
       var restore = function restore() {
         return ready = true;
       };
       this.listener = this.detectDirection.bind(this);
-      this.target.addEventListener('touchstart', restore);
-      this.target.addEventListener('touchend', restore);
-      this.target.addEventListener('touchmove', restore);
-
-      this.target.addEventListener('scroll', function (ev) {
-
-        if (ready) {
-          ready = false;
-          _this.listener(ev);
-          setTimeout(restore, _this.minInterval);
-        }
-      });
+      this.target.addEventListener('touchstart', this.enable);
+      this.target.addEventListener('touchend', this.enable);
+      this.target.addEventListener('touchmove', this.enable);
+      this.target.addEventListener('scroll', this.scrollHandler);
     }
   }, {
     key: 'stop',
     value: function stop() {
       this.target.removeEventListener('scroll', this.listener);
+      this.target.removeEventListener('touchstart', this.enable);
+      this.target.removeEventListener('touchend', this.enable);
+      this.target.removeEventListener('touchmove', this.enable);
     }
   }, {
     key: 'addClasses',
