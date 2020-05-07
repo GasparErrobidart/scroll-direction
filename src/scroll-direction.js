@@ -1,11 +1,12 @@
 class ScrollDirection{
 
   constructor(options = {}){
-    const { target = window , addClassesTo = 'body', minInterval = 25 } = options
+    const { target = window , addClassesTo = 'body', minInterval = 25, tolerance = 2 } = options
     this.minInterval      = minInterval // Interval between checks
     this.target           = target
     this.addClassesTo     = addClassesTo ? document.querySelector(addClassesTo) : addClassesTo;
     this.last             = 0
+    this.tolerance        = tolerance
     this.ready            = true
     this.lastHeight       = null
     this.direction        = ''
@@ -55,8 +56,10 @@ class ScrollDirection{
     this.addClasses()
     this.target.dispatchEvent(new CustomEvent('scrollDirectionChange',{ detail : this }))
   }
+  
 
   detectDirection(ev){
+
     let scrolled      = this.target.scrollY || this.target.scrollTop || 0
     let height        = ( this.target  == window ) ? document.body.clientHeight : this.target.clientHeight
     let heightDiff    = 0
@@ -69,12 +72,11 @@ class ScrollDirection{
 
     let newDirection = this.direction
 
-    if( scrolled > this.last + heightDiff ){
+    if( scrolled - (this.last + heightDiff) > this.tolerance ){
       newDirection = "down"
-    }else if(scrolled < this.last + heightDiff){
+    }else if(scrolled - (this.last + heightDiff) < -this.tolerance){
       newDirection = "up"
     }
-
 
     this.last           = scrolled
     this.lastHeight     = height
@@ -82,6 +84,7 @@ class ScrollDirection{
       this.direction    = newDirection
       this.onDirectionChange()
     }
+
 
   }
 
