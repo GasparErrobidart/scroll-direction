@@ -85,25 +85,29 @@ var ScrollDirection = function () {
     value: function detectDirection(ev) {
 
       var scrolled = this.target.scrollY || this.target.scrollTop || 0;
-      var height = this.target == window ? document.body.clientHeight : this.target.clientHeight;
-      var heightDiff = 0;
+      var newDirection = 'up';
+      if (scrolled > 0) {
+        var height = this.target == window ? document.body.clientHeight : this.target.clientHeight;
+        var heightDiff = 0;
 
-      // If document height changed, adjust scroll value
-      if (typeof this.lastHeight != "number") this.lastHeight = height;
-      if (this.lastHeight != height) {
-        heightDiff = height - this.lastHeight;
+        // If document height changed, adjust scroll value
+        if (typeof this.lastHeight != "number") this.lastHeight = height;
+        if (this.lastHeight != height) {
+          heightDiff = height - this.lastHeight;
+        }
+
+        newDirection = this.direction;
+
+        if (scrolled - (this.last + heightDiff) > this.tolerance) {
+          newDirection = "down";
+        } else if (scrolled - (this.last + heightDiff) < -this.tolerance) {
+          newDirection = "up";
+        }
+
+        this.last = scrolled;
+        this.lastHeight = height;
       }
 
-      var newDirection = this.direction;
-
-      if (scrolled - (this.last + heightDiff) > this.tolerance) {
-        newDirection = "down";
-      } else if (scrolled - (this.last + heightDiff) < -this.tolerance) {
-        newDirection = "up";
-      }
-
-      this.last = scrolled;
-      this.lastHeight = height;
       if (this.direction != newDirection) {
         this.direction = newDirection;
         this.onDirectionChange();
